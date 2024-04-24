@@ -13,6 +13,7 @@ from threading import Thread
 from time import sleep
 import os
 import sys
+import random
 
 #########
 # classes
@@ -20,10 +21,14 @@ import sys
 # the LCD display GUI
 class Lcd(Frame):
     def __init__(self, window):
-        super().__init__(window, bg="black")
+        color="#"
+        a=os.urandom(3).hex()
+        colora= color + a
+        #print(a)
+        self._hex=a
+        super().__init__(window, bg=colora)
         # make the GUI fullscreen
-        window.after(100, window.attributes, '-fullscreen', 'True')
-        #window.attributes("-fullscreen", True)
+        window.after(100, window.attributes, "-fullscreen", "True")
         # we need to know about the timer (7-segment display) to be able to pause/unpause it
         self._timer = None
         # we need to know about the pushbutton to turn off its LED when the program exits
@@ -312,3 +317,5 @@ class Toggles(PhaseThread):
         else:
             # TODO
             pass
+
+
