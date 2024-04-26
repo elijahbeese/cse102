@@ -59,6 +59,7 @@ def setup_phases():
     wires.start()
     button.start()
     toggles.start()
+#     print(gui._hex)
 
 # checks the phase threads
 def check_phases():
@@ -190,3 +191,5 @@ gui.after(1000, bootup)
 
 # display the LCD GUI
 window.mainloop()
+
+
