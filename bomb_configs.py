@@ -7,7 +7,7 @@
 # constants
 DEBUG = False        # debug mode?
 RPi = True           # is this running on the RPi?
-ANIMATE = True       # animate the LCD text?
+ANIMATE = False       # animate the LCD text?
 SHOW_BUTTONS = False # show the Pause and Quit buttons on the main LCD GUI?
 COUNTDOWN = 300      # the initial bomb countdown value (seconds)
 NUM_STRIKES = 5      # the total strikes allowed before the bomb "explodes"
@@ -95,7 +95,7 @@ if (RPi):
 def genSerial():
     # set the digits (used in the toggle switches phase)
     serial_digits = []
-    toggle_value = randint(1, 15)
+    toggle_value = randint(1, 8)
     # the sum of the digits is the toggle value
     while (len(serial_digits) < 3 or toggle_value - sum(serial_digits) > 0):
         d = randint(0, min(9, toggle_value - sum(serial_digits)))
@@ -114,9 +114,12 @@ def genSerial():
     # and shuffle it
     shuffle(serial)
     # finally, add a final letter (F..Z)
-    serial += [ choice([ chr(n) for n in range(70, 91) ]) ]
+    serial += [choice(["R","G","B"]) ]
     # and make the serial number a string
     serial = "".join(serial)
+    
+
+    
 
     return serial, toggle_value, jumper_value
 
@@ -209,6 +212,7 @@ if (DEBUG):
     print(f"Keypad target: {keypad_target}/{passphrase}/{keyword}/{cipher_keyword}(rot={rot})")
     print(f"Button target: {button_target}")
 
+
 # set the bomb's LCD bootup text
 boot_text = f"Booting...\n\x00\x00"\
             f"*Kernel v3.1.4-159 loaded.\n"\
@@ -220,3 +224,7 @@ boot_text = f"Booting...\n\x00\x00"\
             f"*{' '.join(ascii_uppercase)}\n"\
             f"*{' '.join([str(n % 10) for n in range(26)])}\n"\
             f"Rendering phases...\x00"
+
+rgbs = [ "ffffff", "000000", "ff0000", "00ff00" ]
+
+
