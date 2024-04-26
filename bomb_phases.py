@@ -21,20 +21,22 @@ import random
 # the LCD display GUI
 class Lcd(Frame):
     def __init__(self, window):
-        color="#"
-        a=os.urandom(3).hex()
-        colora= color + a
-        #print(a)
-        self._hex=a
-        super().__init__(window, bg=colora)
+#         color="#"
+#         a=os.urandom(3).hex()
+#         colora= color + a
+#         #print(a)
+#         self._hex=a
+        super().__init__(window) #, bg=colora)
         # make the GUI fullscreen
         window.after(100, window.attributes, "-fullscreen", "True")
         # we need to know about the timer (7-segment display) to be able to pause/unpause it
         self._timer = None
         # we need to know about the pushbutton to turn off its LED when the program exits
         self._button = None
+        self._color = rgbs[0]
         # setup the initial "boot" GUI
         self.setupBoot()
+#         return a
 
     # sets up the LCD "boot" GUI
     def setupBoot(self):
@@ -49,6 +51,8 @@ class Lcd(Frame):
 
     # sets up the LCD GUI
     def setup(self):
+        color = "#" + self._color
+        self.config(background=color)
         # the timer
         self._ltimer = Label(self, bg="black", fg="#00ff00", font=("Courier New", 18), text="Time left: ")
         self._ltimer.grid(row=1, column=0, columnspan=3, sticky=W)
@@ -64,9 +68,14 @@ class Lcd(Frame):
         # the toggle switches status
         self._ltoggles = Label(self, bg="black", fg="#00ff00", font=("Courier New", 18), text="Toggles phase: ")
         self._ltoggles.grid(row=5, column=0, columnspan=2, sticky=W)
+        
+        self._dispcolor = Label(self, bg="black", fg="#00ff00", font=("Courier New", 18), text=f"Color={self._color}")
+        self._dispcolor.grid(row=6, column=0, columnspan=2, sticky=W)
         # the strikes left
         self._lstrikes = Label(self, bg="black", fg="#00ff00", font=("Courier New", 18), text="Strikes left: ")
         self._lstrikes.grid(row=5, column=2, sticky=W)
+        
+        
         if (SHOW_BUTTONS):
             # the pause button (pauses the timer)
             self._bpause = tkinter.Button(self, bg="red", fg="white", font=("Courier New", 18), text="Pause", anchor=CENTER, command=self.pause)
@@ -98,6 +107,7 @@ class Lcd(Frame):
         self._lbutton.destroy()
         self._ltoggles.destroy()
         self._lstrikes.destroy()
+        self._dispcolor.destroy()
         if (SHOW_BUTTONS):
             self._bpause.destroy()
             self._bquit.destroy()
@@ -199,7 +209,7 @@ class Keypad(PhaseThread):
         super().__init__(name, component, target)
         # the default value is an empty string
         self._value = ""
-
+        
     # runs the thread
     def run(self):
         self._running = True
@@ -317,5 +327,6 @@ class Toggles(PhaseThread):
         else:
             # TODO
             pass
+        
 
 
