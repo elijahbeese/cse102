@@ -261,9 +261,11 @@ class Wires(PhaseThread):
 
 # the pushbutton phase
 class Button(PhaseThread):
+    colors = [ "R", "G", "B" ]  # the button's possible colors
+
     def __init__(self, component_state, component_rgb, target, color, timer, name="Button"):
         super().__init__(name, component_state, target)
-        # the default value is False/Released
+
         self._value = False
         # has the pushbutton been pressed?
         self._pressed = False
@@ -277,31 +279,39 @@ class Button(PhaseThread):
     # runs the thread
     def run(self):
         self._running = True
-        # set the RGB LED color
-        self._rgb[0].value = False if self._color == "R" else True
-        self._rgb[1].value = False if self._color == "G" else True
-        self._rgb[2].value = False if self._color == "B" else True
+        # initialize and index and counter to help iterate through the RGB colors
+        rgb_index = 0
+        rgb_counter = 0
         while (self._running):
+            # set the LED to the current color
+            self._rgb[0].value = False if Button.colors[rgb_index] == "R" else True
+            self._rgb[1].value = False if Button.colors[rgb_index] == "G" else True
+            self._rgb[2].value = False if Button.colors[rgb_index] == "B" else True
             # get the pushbutton's state
-            self._value = self._component.value
-            # it is pressed
-            if (self._value):
-                # note it
+            while (self._component.value == True):
                 self._pressed = True
-            # it is released
-            else:
-                # was it previously pressed?
-                if (self._pressed):
-                    # check the release parameters
-                    # for R, nothing else is needed
-                    # for G or B, a specific digit must be in the timer (sec) when released
-                    if (not self._target or self._target in self._timer._sec):
-                        self._defused = True
-                    else:
-                        self._failed = True
-                    # note that the pushbutton was released
-                    self._pressed = False
+                self._color = Button.colors[rgb_index]
+                sleep(0.1)
+            if (self._pressed):
+                self._pressed = False
+                if (self._color == self._target):
+                    self._defused = True
+                else:
+                    self._failed = True
+                
+            
+            
+            # increment the RGB counter
+            rgb_counter += 1
+            # switch to the next RGB color every 1s (10 * 0.1s = 1s)
+            if (rgb_counter == 30):
+                rgb_index = (rgb_index + 1) % len(Button.colors)
+                rgb_counter = 0
             sleep(0.1)
+        self._running = False
+
+    def __str__(self):
+        return "Pressed" if self._value else "Released"
 
     # returns the pushbutton's state as a string
     def __str__(self):
