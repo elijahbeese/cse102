@@ -119,6 +119,9 @@ class Lcd(Frame):
         # the quit button
         self._bquit = tkinter.Button(self, bg="red", fg="white", font=("Courier New", 18), text="Quit", anchor=CENTER, command=self.quit)
         self._bquit.grid(row=1, column=2, pady=40)
+        
+        explosion_sound.play()
+        time.sleep(5)
 
     # re-attempts the bomb (after an explosion or a successful defusion)
     def retry(self):
@@ -136,6 +139,8 @@ class Lcd(Frame):
             # turn off the pushbutton's LED
             for pin in self._button._rgb:
                 pin.value = True
+        # play the explosion sound
+        
         # exit the application
         exit(0)
 
