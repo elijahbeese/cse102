@@ -19,6 +19,10 @@ if (RPi):
     from adafruit_ht16k33.segments import Seg7x4
     from digitalio import DigitalInOut, Direction, Pull
     from adafruit_matrixkeypad import Matrix_Keypad
+import pygame.mixer
+pygame.mixer.init()
+explosion_sound = pygame.mixer.Sound('explosion.mp3')
+
 #################################
 # setup the electronic components
 #################################
@@ -86,7 +90,6 @@ if (RPi):
 def genSerial():
     # set the digits (used in the toggle switches phase)
     serial_digits = []
-    toggle_value = randint(1, 8)
     toggle_value = randint(1, 15)
     # the sum of the digits is the toggle value
     while (len(serial_digits) < 3 or toggle_value - sum(serial_digits) > 0):
@@ -175,16 +178,11 @@ button_color = choice(["R", "G", "B"])
 # appropriately set the target (R is None)
 button_target = None
 # G is the first numeric digit in the serial number
-if (button_color == "G"):
-    button_target = [ n for n in serial if n.isdigit() ][0]
 #if (button_color == "G"):
     #button_target = [ n for n in serial if n.isdigit() ][0]
 # B is the last numeric digit in the serial number
-elif (button_color == "B"):
-    button_target = [ n for n in serial if n.isdigit() ][-1]
 #elif (button_color == "B"):
     #button_target = [ n for n in serial if n.isdigit() ][-1]
-
 if (DEBUG):
     print(f"Serial number: {serial}")
     print(f"Toggles target: {bin(toggles_target)[2:].zfill(4)}/{toggles_target}")
@@ -202,8 +200,6 @@ boot_text = f"Booting...\n\x00\x00"\
             f"*{' '.join(ascii_uppercase)}\n"\
             f"*{' '.join([str(n % 10) for n in range(26)])}\n"\
             f"Rendering phases...\x00"
-
-rgbs = [ "ffffff", "000000", "ff0000", "00ff00" ]
 rgbs = [ "FF1005", "10FF05", "1005FF", "00ff00" ]
 keypad_target = str(int(rgbs[0][:2],16))+str(int(rgbs[0][2:4],16))+str(int(rgbs[0][4:],16))
 print(keypad_target)
@@ -211,3 +207,4 @@ button_values=[int(rgbs[1][:2],16), int(rgbs[1][2:4],16), int(rgbs[1][4:],16)]
 button_colors="RGB"
 button_target=button_colors[button_values.index(max(button_values))]
 print(button_target)
+
