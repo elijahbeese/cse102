@@ -326,22 +326,39 @@ class Button(PhaseThread):
             return str("Pressed" if self._value else "Released")
 
 # the toggle switches phase
+# Define the Toggles class
 class Toggles(PhaseThread):
-    def __init__(self, component, target, name="Toggles"):
+    def __init__(self, component, target, serial_last_digit_hex, name="Toggles"):
         super().__init__(name, component, target)
-
-    # runs the thread
+        # Convert the last digit of the serial number to hexadecimal
+        self.serial_last_digit_hex = serial_last_digit_hex
+        
+        # Convert the hexadecimal digit to binary (4 digits)
+        self.target_binary = bin(int(serial_last_digit_hex, 16))[2:].zfill(4)
+        
+        # Initialize the current state of the toggles
+        self.current_state = "0000"  # Initial state of toggles
+        
     def run(self):
-        # TODO
-        pass
-
-    # returns the toggle switches state as a string
+        # Continuously monitor the state of the toggles
+        while self._running:
+            # Check if the current state matches the target binary representation
+            if self.current_state == self.target_binary:
+                # The toggles are in the correct configuration
+                self._defused = True
+                break
+            
+            # Sleep for a short duration before checking again
+            sleep(0.1)
+            
     def __str__(self):
-        if (self._defused):
-            return "DEFUSED"
-        else:
-            # TODO
-            pass
+        # Return the current state of the toggles as a string
+        return self.current_state
+
+# Update the GUI to display the toggles phase state
+
+# Integrate the toggles phase into the main program loop
+
         
 
 
