@@ -64,18 +64,6 @@ def setup_phases():
 # checks the phase threads
 def check_phases():
     global active_phases
-    
-    # check the toggles phase
-    if (toggles._running):
-        #update gui to display toggles phase state
-        gui._ltoggles["text"] = f"Toggles: {toggles}"
-        #check if toggles phase is defused or failed
-        if (toggles._defused):
-            toggles._running = False
-            active_phases -= 1
-        elif (toggles._failed):
-            strike()
-            toggles._failed = False
             
     # check the timer
     if (timer._running):
@@ -207,4 +195,3 @@ gui.after(1000, bootup)
 
 # display the LCD GUI
 window.mainloop()
-
