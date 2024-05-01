@@ -21,6 +21,9 @@ if (RPi):
     from adafruit_ht16k33.segments import Seg7x4
     from digitalio import DigitalInOut, Direction, Pull
     from adafruit_matrixkeypad import Matrix_Keypad
+import pygame.mixer
+pygame.mixer.init()
+explosion_sound = pygame.mixer.Sound('explosion.mp3')
 
 #################################
 # setup the electronic components
@@ -232,5 +235,4 @@ button_values=[int(rgbs[1][:2],16), int(rgbs[1][2:4],16), int(rgbs[1][4:],16)]
 button_colors="RGB"
 button_target=button_colors[button_values.index(max(button_values))]
 print(button_target)
-
 
