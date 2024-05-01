@@ -112,14 +112,21 @@ def genSerial():
     # the letters indicate which jumper wires must be "cut"
     jumper_letters = [ chr(i + 65) for i, n in enumerate(jumper_indexes) if n == 1 ]
 
+    # Generate the last letter of the serial number between 'A' and 'F'
+    serial_letter = choice('ABCDEF')
+    
+    # Calculate toggle target from the last letter
+    toggle_target = ord(serial_letter) - ord('A')
+
     # form the serial number
-    serial = [ str(d) for d in serial_digits ] + jumper_letters
+    serial = [ str(d) for d in serial_digits ] + jumper_letters + [serial_letter]
     # and shuffle it
     shuffle(serial)
     # finally, add a final letter (F..Z)
-    serial += [choice(["R","G","B"]) ]
-    # and make the serial number a string
     serial = "".join(serial)
+
+    return serial, toggle_value, jumper_value, toggle_target
+
     
 
     
