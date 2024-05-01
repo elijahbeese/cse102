@@ -326,54 +326,22 @@ class Button(PhaseThread):
             return str("Pressed" if self._value else "Released")
 
 # the toggle switches phase
-# Define the Toggles class
-class Toggles(Thread):
-    def __init__(self, component, target, serial_last_digit_hex, name="Toggles"):
-        super().__init__(name=name, daemon=True)
-        self._component = component
-        self.target_binary = bin(int(serial_last_digit_hex, 16))[2:].zfill(4)
-        self.current_state = "0000"
-        self._defused = False
-        self._failed = False
-        self._running = True
-
+class Toggles(PhaseThread):
+    def __init__(self, component, target, name="Toggles"):
+        super().__init__(name, component, target)
+    # runs the thread
     def run(self):
-        while self._running:
-            if self.current_state == self.target_binary:
-                self._defused = True
-                break
-            sleep(0.1)
-
-            # Reset _failed to False if the state matches the target binary
-            self._failed = False
-
-    def toggle(self, switch_number):
-        """
-        Simulate toggling the switch with the given number.
-        """
-        if switch_number < len(self.current_state):
-            state = list(self.current_state)
-            state[switch_number] = '1' if state[switch_number] == '0' else '0'
-            self.current_state = "".join(state)
-
-    def is_defused(self):
-        """
-        Check if the toggles phase has been successfully defused.
-        """
-        return self._defused
-
-    def is_failed(self):
-        """
-        Check if the toggles phase has failed.
-        """
-        return self._failed
+        # TODO
+        pass
+    # returns the toggle switches state as a string
+    def __str__(self):
+        if (self._defused):
+            return "DEFUSED"
+        else:
+            # TODO
+            pass
 
 
-
-
-# Update the GUI to display the toggles phase state
-
-# Integrate the toggles phase into the main program loop
 
 
 
