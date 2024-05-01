@@ -6,7 +6,6 @@
 # constants
 DEBUG = False        # debug mode?
 RPi = True           # is this running on the RPi?
-ANIMATE = True       # animate the LCD text?
 ANIMATE = False       # animate the LCD text?
 SHOW_BUTTONS = False # show the Pause and Quit buttons on the main LCD GUI?
 COUNTDOWN = 300      # the initial bomb countdown value (seconds)
@@ -87,8 +86,8 @@ if (RPi):
 def genSerial():
     # set the digits (used in the toggle switches phase)
     serial_digits = []
-    toggle_value = randint(1, 15)
     toggle_value = randint(1, 8)
+    toggle_value = randint(1, 15)
     # the sum of the digits is the toggle value
     while (len(serial_digits) < 3 or toggle_value - sum(serial_digits) > 0):
         d = randint(0, min(9, toggle_value - sum(serial_digits)))
@@ -105,16 +104,12 @@ def genSerial():
     # and shuffle it
     shuffle(serial)
     # finally, add a final letter (F..Z)
-    serial += [ choice([ chr(n) for n in range(70, 91) ]) ]
     serial += [choice(["R","G","B"]) ]
     # and make the serial number a string
     serial = "".join(serial)
-
-
-
-
+    
+    
     return serial, toggle_value, jumper_value
-
 # generates the keypad combination from a keyword and rotation key
 def genKeypadCombination():
     # encrypts a keyword using a rotation cipher
@@ -182,17 +177,20 @@ button_target = None
 # G is the first numeric digit in the serial number
 if (button_color == "G"):
     button_target = [ n for n in serial if n.isdigit() ][0]
+#if (button_color == "G"):
+    #button_target = [ n for n in serial if n.isdigit() ][0]
 # B is the last numeric digit in the serial number
 elif (button_color == "B"):
     button_target = [ n for n in serial if n.isdigit() ][-1]
+#elif (button_color == "B"):
+    #button_target = [ n for n in serial if n.isdigit() ][-1]
+
 if (DEBUG):
     print(f"Serial number: {serial}")
     print(f"Toggles target: {bin(toggles_target)[2:].zfill(4)}/{toggles_target}")
     print(f"Wires target: {bin(wires_target)[2:].zfill(5)}/{wires_target}")
     print(f"Keypad target: {keypad_target}/{passphrase}/{keyword}/{cipher_keyword}(rot={rot})")
     print(f"Button target: {button_target}")
-
-
 # set the bomb's LCD bootup text
 boot_text = f"Booting...\n\x00\x00"\
             f"*Kernel v3.1.4-159 loaded.\n"\
@@ -206,5 +204,10 @@ boot_text = f"Booting...\n\x00\x00"\
             f"Rendering phases...\x00"
 
 rgbs = [ "ffffff", "000000", "ff0000", "00ff00" ]
-
-
+rgbs = [ "FF1005", "10FF05", "1005FF", "00ff00" ]
+keypad_target = str(int(rgbs[0][:2],16))+str(int(rgbs[0][2:4],16))+str(int(rgbs[0][4:],16))
+print(keypad_target)
+button_values=[int(rgbs[1][:2],16), int(rgbs[1][2:4],16), int(rgbs[1][4:],16)]
+button_colors="RGB"
+button_target=button_colors[button_values.index(max(button_values))]
+print(button_target)
