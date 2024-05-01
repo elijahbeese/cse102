@@ -3,16 +3,15 @@
 # Configuration file
 # Team: 
 #################################
-
 # constants
 DEBUG = False        # debug mode?
 RPi = True           # is this running on the RPi?
+ANIMATE = True       # animate the LCD text?
 ANIMATE = False       # animate the LCD text?
 SHOW_BUTTONS = False # show the Pause and Quit buttons on the main LCD GUI?
 COUNTDOWN = 300      # the initial bomb countdown value (seconds)
 NUM_STRIKES = 5      # the total strikes allowed before the bomb "explodes"
 NUM_PHASES = 4       # the total number of initial active bomb phases
-
 # imports
 from random import randint, shuffle, choice
 from string import ascii_uppercase
@@ -21,10 +20,6 @@ if (RPi):
     from adafruit_ht16k33.segments import Seg7x4
     from digitalio import DigitalInOut, Direction, Pull
     from adafruit_matrixkeypad import Matrix_Keypad
-import pygame.mixer
-pygame.mixer.init()
-explosion_sound = pygame.mixer.Sound('explosion.mp3')
-
 #################################
 # setup the electronic components
 #################################
@@ -36,7 +31,6 @@ if (RPi):
     component_7seg = Seg7x4(i2c)
     # set the 7-segment display brightness (0 -> dimmest; 1 -> brightest)
     component_7seg.brightness = 0.5
-
 # keypad
 # 8 pins: 10, 9, 11, 5, 6, 13, 19, NA
 #         -----------KEYPAD----------
@@ -46,9 +40,7 @@ if (RPi):
     keypad_rows = [DigitalInOut(i) for i in (board.D5, board.D6, board.D13, board.D19)]
     # the keys
     keypad_keys = ((1, 2, 3), (4, 5, 6), (7, 8, 9), ("*", 0, "#"))
-
     component_keypad = Matrix_Keypad(keypad_rows, keypad_cols, keypad_keys)
-
 # jumper wires
 # 10 pins: 14, 15, 18, 23, 24, 3V3, 3V3, 3V3, 3V3, 3V3
 #          -------JUMP1------  ---------JUMP2---------
@@ -60,7 +52,6 @@ if (RPi):
         # pins are input and pulled down
         pin.direction = Direction.INPUT
         pin.pull = Pull.DOWN
-
 # pushbutton
 # 6 pins: 4, 17, 27, 22, 3V3, 3V3
 #         -BUT1- -BUT2-  --BUT3--
@@ -75,7 +66,6 @@ if (RPi):
         # RGB pins are output
         pin.direction = Direction.OUTPUT
         pin.value = True
-
 # toggle switches
 # 3x3 pins: 12, 16, 20, 21, 3V3, 3V3, 3V3, 3V3, GND, GND, GND, GND
 #           -TOG1-  -TOG2-  --TOG3--  --TOG4--  --TOG5--  --TOG6--
@@ -86,7 +76,6 @@ if (RPi):
         # pins are input and pulled down
         pin.direction = Direction.INPUT
         pin.pull = Pull.DOWN
-
 ###########
 # functions
 ###########
@@ -99,11 +88,11 @@ def genSerial():
     # set the digits (used in the toggle switches phase)
     serial_digits = []
     toggle_value = randint(1, 15)
+    toggle_value = randint(1, 8)
     # the sum of the digits is the toggle value
     while (len(serial_digits) < 3 or toggle_value - sum(serial_digits) > 0):
         d = randint(0, min(9, toggle_value - sum(serial_digits)))
         serial_digits.append(d)
-
     # set the letters (used in the jumper wires phase)
     jumper_indexes = [ 0 ] * 5
     while (sum(jumper_indexes) < 3):
@@ -111,25 +100,18 @@ def genSerial():
     jumper_value = int("".join([ str(n) for n in jumper_indexes ]), 2)
     # the letters indicate which jumper wires must be "cut"
     jumper_letters = [ chr(i + 65) for i, n in enumerate(jumper_indexes) if n == 1 ]
-
-    # Generate the last letter of the serial number between 'A' and 'F'
-    serial_letter = choice('ABCDEF')
-    
-    # Calculate toggle target from the last letter
-    toggle_target = ord(serial_letter) - ord('A')
-
     # form the serial number
-    serial = [ str(d) for d in serial_digits ] + jumper_letters + [serial_letter]
+    serial = [ str(d) for d in serial_digits ] + jumper_letters
     # and shuffle it
     shuffle(serial)
     # finally, add a final letter (F..Z)
+    serial += [ choice([ chr(n) for n in range(70, 91) ]) ]
+    serial += [choice(["R","G","B"]) ]
+    # and make the serial number a string
     serial = "".join(serial)
 
-    return serial, toggle_value, jumper_value, toggle_target
 
-    
 
-    
 
     return serial, toggle_value, jumper_value
 
@@ -138,27 +120,21 @@ def genKeypadCombination():
     # encrypts a keyword using a rotation cipher
     def encrypt(keyword, rot):
         cipher = ""
-
         # encrypt each letter of the keyword using rot
         for c in keyword:
             cipher += chr((ord(c) - 65 + rot) % 26 + 65)
-
         return cipher
-
     # returns the keypad digits that correspond to the passphrase
     def digits(passphrase):
         combination = ""
         keys = [ None, None, "ABC", "DEF", "GHI", "JKL", "MNO", "PRS", "TUV", "WXY" ]
-
         # process each character of the keyword
         for c in passphrase:
             for i, k in enumerate(keys):
                 if (k and c in k):
                     # map each character to its digit equivalent
                     combination += str(i)
-
         return combination
-
     # the list of keywords and matching passphrases
     keywords = { "BANDIT": "RIVER",\
                  "BUCKLE": "FADED",\
@@ -178,15 +154,12 @@ def genKeypadCombination():
                  "ZAGGED": "YACHT" }
     # the rotation cipher key
     rot = randint(1, 25)
-
     # pick a keyword and matching passphrase
     keyword, passphrase = choice(list(keywords.items()))
     # encrypt the passphrase and get its combination
     cipher_keyword = encrypt(keyword, rot)
     combination = digits(passphrase)
-
     return keyword, cipher_keyword, rot, combination, passphrase
-
 ###############################
 # generate the bomb's specifics
 ###############################
@@ -195,7 +168,6 @@ def genKeypadCombination():
 #  toggles_target: the toggles phase defuse value
 #  wires_target: the wires phase defuse value
 serial, toggles_target, wires_target = genSerial()
-
 # generate the combination for the keypad phase
 #  keyword: the plaintext keyword for the lookup table
 #  cipher_keyword: the encrypted keyword for the lookup table
@@ -203,18 +175,16 @@ serial, toggles_target, wires_target = genSerial()
 #  keypad_target: the keypad phase defuse value (combination)
 #  passphrase: the target plaintext passphrase
 keyword, cipher_keyword, rot, keypad_target, passphrase = genKeypadCombination()
-
 # generate the color of the pushbutton (which determines how to defuse the phase)
 button_color = choice(["R", "G", "B"])
 # appropriately set the target (R is None)
 button_target = None
 # G is the first numeric digit in the serial number
-#if (button_color == "G"):
-    #button_target = [ n for n in serial if n.isdigit() ][0]
+if (button_color == "G"):
+    button_target = [ n for n in serial if n.isdigit() ][0]
 # B is the last numeric digit in the serial number
-#elif (button_color == "B"):
-    #button_target = [ n for n in serial if n.isdigit() ][-1]
-
+elif (button_color == "B"):
+    button_target = [ n for n in serial if n.isdigit() ][-1]
 if (DEBUG):
     print(f"Serial number: {serial}")
     print(f"Toggles target: {bin(toggles_target)[2:].zfill(4)}/{toggles_target}")
@@ -235,11 +205,6 @@ boot_text = f"Booting...\n\x00\x00"\
             f"*{' '.join([str(n % 10) for n in range(26)])}\n"\
             f"Rendering phases...\x00"
 
-rgbs = [ "FF1005", "10FF05", "1005FF", "00ff00" ]
-keypad_target = str(int(rgbs[0][:2],16))+str(int(rgbs[0][2:4],16))+str(int(rgbs[0][4:],16))
-print(keypad_target)
-button_values=[int(rgbs[1][:2],16), int(rgbs[1][2:4],16), int(rgbs[1][4:],16)]
-button_colors="RGB"
-button_target=button_colors[button_values.index(max(button_values))]
-print(button_target)
+rgbs = [ "ffffff", "000000", "ff0000", "00ff00" ]
+
 
