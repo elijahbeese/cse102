@@ -3,12 +3,10 @@
 # Main program
 # Team: 
 #################################
-
 # import the configs
 from bomb_configs import *
 # import the phases
 from bomb_phases import *
-
 ###########
 # functions
 ###########
@@ -30,10 +28,8 @@ def bootup(n=0):
         # add the next character (but don't render \x00 since it specifies a longer pause)
         if (boot_text[n] != "\x00"):
             gui._lscroll["text"] += boot_text[n]
-
         # scroll the next character after a slight delay (\x00 is a longer delay)
         gui.after(25 if boot_text[n] != "\x00" else 750, bootup, n + 1)
-
 # sets up the phase threads
 def setup_phases():
     global timer, keypad, wires, button, toggles
@@ -52,10 +48,13 @@ def setup_phases():
     gui.setButton(button)
     # setup the toggle switches thread
     toggles = Toggles(component_toggles, toggles_target)
-
     # start the phase threads
     timer.start()
     keypad.start()
+    wires.start()
+    button.start()
+    toggles.start()
+#     print(gui._hex)
 #     wires.start()
 #     button.start()
 #     toggles.start()
@@ -64,7 +63,7 @@ def setup_phases():
 # checks the phase threads
 def check_phases():
     global active_phases
-            
+    
     # check the timer
     if (timer._running):
         # update the GUI
@@ -114,7 +113,7 @@ def check_phases():
         if (button._defused):
             button._running = False
             active_phases -= 1
-            
+
         # the phase has failed -> strike
         elif (button._failed):
             strike()
@@ -133,7 +132,6 @@ def check_phases():
             strike()
             # reset the toggles
             toggles._failed = False
-
     # note the strikes on the GUI
     gui._lstrikes["text"] = f"Strikes left: {strikes_left}"
     # too many strikes -> explode!
@@ -143,7 +141,6 @@ def check_phases():
         gui.after(1000, gui.conclusion, False)
         # stop checking phases
         return
-
     # the bomb has been successfully defused!
     if (active_phases == 0):
         # turn off the bomb and render the conclusion GUI
@@ -151,17 +148,14 @@ def check_phases():
         gui.after(100, gui.conclusion, True)
         # stop checking phases
         return
-
     # check the phases again after a slight delay
     gui.after(100, check_phases)
-
 # handles a strike
 def strike():
     global strikes_left
     
     # note the strike
     strikes_left -= 1
-
 # turns off the bomb
 def turn_off():
     # stop all threads
@@ -170,28 +164,22 @@ def turn_off():
     wires._running = False
     button._running = False
     toggles._running = False
-
     # turn off the 7-segment display
     component_7seg.blink_rate = 0
     component_7seg.fill(0)
     # turn off the pushbutton's LED
     for pin in button._rgb:
         pin.value = True
-
 ######
 # MAIN
 ######
-
 # initialize the LCD GUI
 window = Tk()
 gui = Lcd(window)
-
 # initialize the bomb strikes and active phases (i.e., not yet defused)
 strikes_left = NUM_STRIKES
 active_phases = NUM_PHASES
-
 # "boot" the bomb
 gui.after(1000, bootup)
-
 # display the LCD GUI
 window.mainloop()
