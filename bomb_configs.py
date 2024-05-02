@@ -108,6 +108,8 @@ def genSerial():
     shuffle(serial)
     # finally, add a final letter (F..Z)
     serial += [choice(["R","G","B"]) ]
+    toggle_value = randint(1, 6)
+    serial += [str(toggle_value)]
     # and make the serial number a string
     serial = "".join(serial)
     
@@ -165,7 +167,7 @@ def genKeypadCombination():
 #  serial: the bomb's serial number
 #  toggles_target: the toggles phase defuse value
 #  wires_target: the wires phase defuse value
-serial, toggles_target, wires_target = genSerial()
+serial, toggles_index, wires_target = genSerial()
 # generate the combination for the keypad phase
 #  keyword: the plaintext keyword for the lookup table
 #  cipher_keyword: the encrypted keyword for the lookup table
@@ -200,11 +202,22 @@ boot_text = f"Booting...\n\x00\x00"\
             f"*{' '.join(ascii_uppercase)}\n"\
             f"*{' '.join([str(n % 10) for n in range(26)])}\n"\
             f"Rendering phases...\x00"
-rgbs = [ "FF1005", "10FF05", "1005FF", "00ff00" ]
+rgbs = []
+for i in range(4):
+    r = hex(randint(1, 255))[2:].zfill(2).replace("0", "1")
+    g = hex(randint(1, 255))[2:].zfill(2).replace("0", "1")
+    b = hex(randint(1, 255))[2:].zfill(2).replace("0", "1")
+    rgbs.append(f"{r}{g}{b}")
+print(rgbs)                
 keypad_target = str(int(rgbs[0][:2],16))+str(int(rgbs[0][2:4],16))+str(int(rgbs[0][4:],16))
 print(keypad_target)
 button_values=[int(rgbs[1][:2],16), int(rgbs[1][2:4],16), int(rgbs[1][4:],16)]
 button_colors="RGB"
 button_target=button_colors[button_values.index(max(button_values))]
 print(button_target)
-
+toggles_target = int(rgbs[2][toggles_index-1], 16)
+print(serial)
+print(toggles_index, toggles_target)
+wire_values=[int(rgbs[3][:2],16), int(rgbs[3][2:4],16), int(rgbs[3][4:],16)]
+print(wire_values)
+wire_num=wire_values.index(max(wire_values))
