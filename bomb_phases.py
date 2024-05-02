@@ -1,4 +1,4 @@
-#################################
+################################
 # CSC 102 Defuse the Bomb Project
 # GUI and Phase class definitions
 # Team: 
@@ -161,6 +161,54 @@ class PhaseThread(Thread):
         # phase threads are either running or not
         self._running = False
 
+class NumericPhase(PhaseThread):
+    def __init__(self, name, component=None, target=None, display_length=0):
+        super().__init__(name, component, target)
+        # the default value is the current state of the component
+        self._value = self._get_int_state()
+        # we need to know the previous state to detect state change
+        self._prev_value = self._value
+        # we need to know the display length (character width) of the pin states (for the GUI)
+        self._display_length = display_length
+        if wire_num==0:
+            self._target="00101"
+        if wire_num==1:
+            self._target="10001"
+        if wire_num==2:
+            self._target="10100"
+
+
+    # runs the thread
+    def run(self):
+        self._running = True
+        while (self._running):
+            # get the component value
+            self._value = self._get_int_state()
+            # the component value is correct -> phase defused
+            if (self._value == self._target):
+                self._defused = True
+            # the component state has changed
+            elif (self._value != self._prev_value):
+                # one or more component states are incorrect -> phase failed (strike)
+                if (not self._check_state()):
+                    self._failed = True
+                # note the updated state
+                self._prev_value = self._value
+            sleep(0.1)
+
+    # checks the component for an incorrect state (only internally called)
+    def _check_state(self):
+        # get a list (True/False) of the current, previous, and valid (target) component states
+        states = self._get_bool_state()
+        prev_states = [ bool(int(c)) for c in bin(self._prev_value)[2:].zfill(self._display_length) ]
+        valid_states = [ bool(int(c)) for c in bin(self._target)[2:].zfill(self._display_length) ]
+        # go through each component state
+        for i in range(len(states)):
+            # a component state has changed *and* it is in an invalid state -> phase failed (strike)
+            if (states[i] != prev_states[i] and states[i] != valid_states[i]):
+                return False
+        return True
+
 # the timer phase
 class Timer(PhaseThread):
     def __init__(self, component, initial_value, name="Timer"):
@@ -254,7 +302,14 @@ class Wires(PhaseThread):
     # runs the thread
     def run(self):
         # TODO
-        pass
+        self._running = True
+        while (True):
+            # get the jumper wire states (0->False, 1->True)
+            
+            sleep(0.1)
+            
+        
+        self._running = False
 
     # returns the jumper wires state as a string
     def __str__(self):
@@ -262,7 +317,7 @@ class Wires(PhaseThread):
             return "DEFUSED"
         else:
             # TODO
-            pass
+            return "".join([ chr(int(i)+65) if pin.value else "." for i, pin in enumerate(self._component) ])
 
 # the pushbutton phase
 class Button(PhaseThread):
@@ -329,24 +384,54 @@ class Button(PhaseThread):
 class Toggles(PhaseThread):
     def __init__(self, component, target, name="Toggles"):
         super().__init__(name, component, target)
+        self._value = self._get_int_state()
+        self._prev_value = self._value
+        self._display_length = 4
+
     # runs the thread
     def run(self):
-        # TODO
-        pass
+        self._running = True
+        while (self._running):
+            # get the component value
+            self._value = self._get_int_state()
+            # the component value is correct -> phase defused
+            if (self._value == self._target):
+                self._defused = True
+            # the component state has changed
+            elif (self._value != self._prev_value):
+                # one or more component states are incorrect -> phase failed (strike)
+                if (not self._check_state()):
+                    self._failed = True
+                # note the updated state
+                self._prev_value = self._value
+            sleep(0.1)
+
+    # checks the component for an incorrect state (only internally called)
+    def _check_state(self):
+        # get a list (True/False) of the current, previous, and valid (target) component states
+        states = self._get_bool_state()
+        prev_states = [ bool(int(c)) for c in bin(self._prev_value)[2:].zfill(self._display_length) ]
+        valid_states = [ bool(int(c)) for c in bin(self._target)[2:].zfill(self._display_length) ]
+        # go through each component state
+        for i in range(len(states)):
+            # a component state has changed *and* it is in an invalid state -> phase failed (strike)
+            if (states[i] != prev_states[i] and states[i] != valid_states[i]):
+                return False
+        return True
+
+    # returns the state of the component as a list (True/False)
+    def _get_bool_state(self):
+        return [ pin.value for pin in self._component ]
+
+    # returns the state of the component as an integer
+    def _get_int_state(self):
+        return int("".join([ str(int(n)) for n in self._get_bool_state() ]), 2)
+
     # returns the toggle switches state as a string
     def __str__(self):
         if (self._defused):
             return "DEFUSED"
         else:
             # TODO
-            pass
-
-
-
-
-
-
-
-        
-
+            return str(self._get_bool_state())
 
