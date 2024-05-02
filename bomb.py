@@ -51,9 +51,9 @@ def setup_phases():
     # start the phase threads
     timer.start()
     keypad.start()
-    wires.start()
-    button.start()
-    toggles.start()
+#     wires.start()
+#     button.start()
+#     toggles.start()
 #     print(gui._hex)
 #     wires.start()
 #     button.start()
@@ -100,6 +100,7 @@ def check_phases():
         if (wires._defused):
             wires._running = False
             active_phases -= 1
+            turn_off()
         # the phase has failed -> strike
         elif (wires._failed):
             strike()
@@ -113,6 +114,10 @@ def check_phases():
         if (button._defused):
             button._running = False
             active_phases -= 1
+            gui.config(bg=f"#{rgbs[2]}")
+            gui._dispcolor["text"] = f"Color={rgbs[2]}"
+            toggles.start()
+
 
         # the phase has failed -> strike
         elif (button._failed):
@@ -127,6 +132,9 @@ def check_phases():
         if (toggles._defused):
             toggles._running = False
             active_phases -= 1
+            gui.config(bg=f"#{rgbs[3]}")
+            gui._dispcolor["text"] = f"Color={rgbs[3]}"
+            wires.start()
         # the phase has failed -> strike
         elif (toggles._failed):
             strike()
